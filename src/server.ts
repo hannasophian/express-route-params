@@ -1,4 +1,6 @@
 import express from "express";
+import { read } from "fs";
+import { join } from "path";
 
 const app = express();
 
@@ -26,15 +28,57 @@ app.get("/eat/carrot", (req, res) => {
   });
 });
 
-app.get("/echo/:exampleRouteParameter", (req, res) => {
+app.get<{exampleRouteParameter: string}>("/echo/:exampleRouteParameter", (req, res) => {
   const echoContent = req.params.exampleRouteParameter;
+  // const echoContent = req.params.exampleRouteParametre; // oops, typo
+
   res.json({
     echo: echoContent,
     message: `I am echoing back to you: ${echoContent}`,
   });
 });
 
-app.get("/multiply/:numOne/:numTwo", (req, res) => {
+// app.get<{numOne: string; numTwo: string}>("/add/:numOne/:numTwo", (req, res) => {
+//   const {numOne, numTwo} = req.params;
+//   const addition = parseInt(numOne) + parseInt(numTwo);
+//   res.json({
+//     original: `${numOne} + ${numTwo}`,
+//     result: addition
+//   })
+// })
+
+// app.get("/add/*", (req, res) => {
+//   let numbers = req.params[0].split("/");
+
+//   let sum = 0;
+//   for (let num of numbers) {
+//     sum += parseInt(num);
+//   }
+//   res.json({
+//     original: numbers.join(" + "),
+//     result: sum
+//   })
+// })
+
+app.get<{numOne:string; numTwo:string; numThree?:string}>("/add/:numOne/:numTwo/:numThree?", (req, res) => {
+  let numbers;
+  if (req.params.numThree) {
+    numbers = [req.params.numOne, req.params.numTwo, req.params.numThree]
+  } else {
+    numbers = [req.params.numOne, req.params.numTwo]
+  }
+
+  let sum = 0;
+  for (let num of numbers) {
+    sum += parseInt(num);
+  }
+  res.json({
+    original: numbers.join(" + "),
+    result: sum
+  })
+})
+
+app.get<{numOne:number; numTwo:number}>("/multiply/:numOne/:numTwo", (req, res) => {
   /**
    * Note that `numOne` and `numTwo` are both typed as string.
    * (Hover over with your mouse to see!)
@@ -43,7 +87,8 @@ app.get("/multiply/:numOne/:numTwo", (req, res) => {
    * are parsed by Express.
    */
   const { numOne, numTwo } = req.params;
-  const multiplication = parseInt(numOne) * parseInt(numTwo);
+  // const multiplication = parseInt(numOne) * parseInt(numTwo);
+  const multiplication = numOne * numTwo;
   res.json({
     original: `${numOne} x ${numTwo}`,
     result: multiplication,
@@ -70,6 +115,22 @@ app.get<{ name: string }>("/happy-birthday/:name", (req, res) => {
     ],
   });
 });
+
+app.get<{ strToShout: string }>("/shout/:strToShout", (req, res) => {
+  const shoutResult = req.params.strToShout.toUpperCase();
+  res.json({
+    shout: shoutResult,
+    result: `I am shouting back to you: ${shoutResult}`
+  });
+});
+
+app.get<{food:string}>("/eat/:food", (req, res) => {
+  let food = req.params.food;
+  let outputStr = ["a","e","i","o","u"].includes(food[0].toLowerCase()) ? `Yum yum - you ate an ${food}`:`Yum yum - you ate a ${food}`;
+  res.json({
+    message: outputStr
+  })
+})
 
 // using 4000 by convention, but could be changed
 const PORT_NUMBER = 4000;
